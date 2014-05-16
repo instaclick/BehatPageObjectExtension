@@ -63,11 +63,10 @@ class PageFactory implements PageFactoryInterface
      */
     public function createPage($name)
     {
-        $pageClass = $this->pageNamespace.$this->classifyName($name);
-        $namespace = $this->getPageObjectNamespace();
+        $pageClass = $this->getPageObjectNamespace() . 'Page\\' .$this->classifyName($name);
 
-        if (!class_exists($pageClass) && $namespace) {
-            $pageClass = $namespace.$this->classifyName($name);
+        if (!class_exists($pageClass) && $this->pageNamespace) {
+            $pageClass = $this->pageNamespace . $this->classifyName($name);
         }
 
         if (!class_exists($pageClass)) {
@@ -82,20 +81,19 @@ class PageFactory implements PageFactoryInterface
      *
      * @return Element
      */
-    public function createElement($name)
+    public function createElement($name, $selector = null)
     {
-        $elementClass = $this->elementNamespace.$this->classifyName($name);
-        $namespace = $this->getPageObjectNamespace();
+        $elementClass = $this->getPageObjectNamespace() . 'Element\\' .$this->classifyName($name);
 
-        if (!class_exists($elementClass) && $namespace) {
-            $elementClass = $namespace.$this->classifyName($name);
+        if (!class_exists($elementClass) && $this->elementNamespace) {
+            $elementClass = $this->elementNamespace . $this->classifyName($name);
         }
 
         if (!class_exists($elementClass)) {
             throw new \LogicException(sprintf('"%s" element not recognised. "%s" class not found.', $name, $elementClass));
         }
 
-        return new $elementClass($this->mink->getSession(), $this);
+        return new $elementClass($this->mink->getSession(), $this, $selector);
     }
 
     /**
@@ -125,11 +123,19 @@ class PageFactory implements PageFactoryInterface
     {
         $backtrace = debug_backtrace();
 
-        if (isset($backtrace[2]['object']) && $backtrace[2]['object'] instanceof PageObjectContext) {
-            $namespace = get_class($backtrace[2]['object']);
-            $pos = strrpos($namespace, '\\');
+        foreach ($backtrace as $index) {
+            if ( ! isset($index['object'])) {
+                continue;
+            }
 
-            return ($pos !== false ? substr($namespace, 0, $pos) : '') . '\\Page\\';
+            if ( ! $index['object'] instanceof PageObjectContext) {
+                continue;
+            }
+
+            $namespace = get_class($index['object']);
+            $position  = strrpos($namespace, '\\');
+
+            return ($position !== false ? substr($namespace, 0, $position) : '') .'\\';
         }
 
         return null;

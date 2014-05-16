@@ -22,9 +22,14 @@ abstract class Element extends NodeElement
     /**
      * @param Session              $session
      * @param PageFactoryInterface $pageFactory
+     * @param mixed                $selector
      */
-    public function __construct(Session $session, PageFactoryInterface $pageFactory)
+    public function __construct(Session $session, PageFactoryInterface $pageFactory, $selector = null)
     {
+        if ($selector) {
+            $this->selector = $selector;
+        }
+
         parent::__construct($this->getSelectorAsXpath($session->getSelectorsHandler()), $session);
 
         $this->pageFactory = $pageFactory;
